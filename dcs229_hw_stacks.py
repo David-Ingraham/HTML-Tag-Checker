@@ -23,7 +23,7 @@ def readFile(path: str) -> str:
         raise FileNotFoundError(msg)
 
     with open(path) as f:
-        data = f.read()
+        data = f.read().strip()
 
     return data
 
@@ -55,12 +55,17 @@ def parseHTML(htmlStr: str)-> bool: #if false print out whih tags were missed
     tagList : list = re.findall(pattern, htmlStr)
 
 
-    for tag in tagList:
-        if tag[1] == '': #each item in the taglist is a tuple, and the second item being blank means its a opening tag
-            stack.push(tag[0])   
+    for i in  range(len(tagList)):
+
+        if tagList[0][0] == '':
+            print(f'unmatched </{tagList[0][1]}> ')
+            return False #if the first tag is closing tag, return false 
+        
+        if tagList[i][1] == '': #each item in the taglist is a tuple, and the second item being blank means its a opening tag
+            stack.push(tagList[i][0])   
         else:
-            if stack.top() != tag[1]:
-                print(f'Mismatched closing tag: {stack.pop()} to {tag[1]}')
+            if stack.top() != tagList[i][1]:
+                print(f'mismatched <{stack.pop()}> to </{tagList[i][1]}>')
                 return False
             stack.pop()
             
@@ -70,9 +75,12 @@ def parseHTML(htmlStr: str)-> bool: #if false print out whih tags were missed
     if not stack.is_empty(): 
         res=[]
         for i in range(len(stack)):
-            res.append(stack.pop())
+            res.append(f'<{stack.pop()}>')
+
+        x = " ".join(res[::-1])
+
         
-        print(f'Unmatched opening tags: {res[::-1]}')
+        print(f'unmatched tags: {x}')
         return False
 
 
@@ -110,8 +118,20 @@ def main() -> None:
         raise IndexError(f'Incorrect Number of arguments. Needs 2, received {len(sys.argv)}')
     
         sys.exit(2)
+
+    try:
+        data = readFile(sys.argv[1])
+
+    except FileNotFoundError:
+        print(f'{sys.argv[1]} file or directory cannot be found')
+        sys.exit(1)
+
+    except IndexError:
+        print(f'Incorrect Number of arguments. Needs 2, received {len(sys.argv)}')
+        sys.exit(2)
+
         
-    data = readFile(sys.argv[1])
+    
     print(parseHTML(data))
 
 
